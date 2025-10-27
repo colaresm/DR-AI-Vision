@@ -11,5 +11,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-![Texto Alternativo](docs/0.png)
-![Texto Alternativo](docs/1.png)
+<div style="display: flex; justify-content: space-around;">
+  <img src="docs/0.png" alt="Texto Alternativo 1" width="48%">
+  <img src="docs/1.png" alt="Texto Alternativo 2" width="48%">
+</div>
