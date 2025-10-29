@@ -24,7 +24,7 @@ def predict_and_segment_single():
             return jsonify({"error": "Failed to decode image"}), 400
         
         segmented_image = segment_hard_exudates(img)
-        cv2.imwrite("segmented.png",segmented_image)
+        cv2.imwrite("filename.png",segmented_image)
         return jsonify({"prediction":predict(img)})
 
     except Exception as e:
