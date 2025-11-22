@@ -2,9 +2,9 @@ import cv2
 from tensorflow.keras.models import load_model
 import numpy as np
 import keras.backend as K
-
 from keras.saving import register_keras_serializable
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 @tf.keras.utils.register_keras_serializable()
 def jaccard_index(y_true, y_pred):
@@ -50,32 +50,44 @@ def combined_loss(alpha=0.25, gamma=2.0, dice_weight=0.5, focal_weight=0.5):
         return dice_weight * dice_loss(y_true, y_pred) + focal_weight * focal_loss(alpha, gamma)(y_true, y_pred)
     return loss
 
-import cv2
-import numpy as np
-from tensorflow.keras.models import load_model
 
-def segment_hard_exudatess(image):
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    model = load_model("models/hard_exudates_segmentation.keras", custom_objects={'loss': combined_loss})
-    if len(image.shape) == 2:
-        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
-    elif image.shape[2] == 1:
-        image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+def segment_hard_exudates(image):
+    model = load_model(
+        "models/hard_exudates_segmentation.keras",
+        custom_objects={'loss': combined_loss}
+    )
+
+    print("Original:", image.shape, image.min(), image.max())
+
     image = cv2.resize(image, (256, 256))
     image = image.astype(np.float32) / 255.0
+
+    print("Preprocessada:", image.shape, image.min(), image.max())
+
     input_image = np.expand_dims(image, axis=0)
     segmented_image = model.predict(input_image)[0]
+
+    print("Saída rede:", segmented_image.shape,
+          segmented_image.min(), segmented_image.max())
+
     if segmented_image.shape[-1] == 2:
         segmented_image = segmented_image[..., 1]
+
     segmented_image = (segmented_image > 0.5).astype(np.uint8)
+
+    cv2.imwrite("dados.png", (image * 255).astype(np.uint8))
+    cv2.imwrite("segmentada.png", (segmented_image * 255).astype(np.uint8))
+
     return segmented_image
 
-img = cv2.imread("./test/olho-esquerdo-8.jpg")
 
-import matplotlib.pyplot as plt
-segmented = segment_hard_exudatess(img)
 
-plt.imshow(segmented)
-plt.show()
+#img = cv2.imread("./test/olho-esquerdo-8.jpg")
+
+#import matplotlib.pyplot as plt
+#Ísegmented = segment_hard_exudatess(img)
+
+#plt.imshow(segmented)
+#plt.show()
 
 
