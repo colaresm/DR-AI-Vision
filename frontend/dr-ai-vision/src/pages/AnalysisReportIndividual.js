@@ -5,6 +5,10 @@ function UploadPage() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
 
+  const [prediction, setPrediction] = useState(null);
+  const [overlayImage, setOverlayImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setSelectedFile(file);
@@ -13,18 +17,44 @@ function UploadPage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewUrl(reader.result);
+        setOverlayImage(null); // limpa imagem segmentada antiga
+        setPrediction(null); // limpa última predição
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!selectedFile) {
       alert("Por favor, selecione uma imagem antes de enviar.");
       return;
     }
-    alert(`Imagem "${selectedFile.name}" enviada com sucesso!`);
-    
+
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("imagem", selectedFile);
+
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:5000/api/predict-and-segment-single",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+      console.log("API response:", data);
+
+      setPrediction(data.prediction);
+      setOverlayImage(`data:image/png;base64,${data.overlay_image}`);
+    } catch (error) {
+      console.error("Erro ao enviar imagem:", error);
+      alert("Erro ao enviar a imagem.");
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -49,15 +79,28 @@ function UploadPage() {
             {selectedFile ? "Alterar imagem" : "Selecionar imagem"}
           </label>
 
+          {/* Preview da imagem, original antes da análise e segmentada depois */}
           {previewUrl && (
             <div className="image-preview">
-              <img src={previewUrl} alt="Preview" />
+              <img
+                src={overlayImage ? overlayImage : previewUrl}
+                alt="Preview"
+              />
             </div>
           )}
 
           <button className="upload-button" onClick={handleUpload}>
-            Enviar para Análise
+            {loading ? "Enviando..." : "Enviar para Análise"}
           </button>
+
+         
+          {prediction && (
+            <div className="result-box">
+              <p>
+                <strong>Predição:</strong> {prediction}
+              </p>
+            </div>
+          )}
         </div>
       </main>
     </div>

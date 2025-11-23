@@ -1,5 +1,4 @@
-/* Fundo com o mesmo gradiente do App */
-.upload-container {
+ .upload-container {
   height: 100vh;
   display: flex;
   flex-direction: column;
